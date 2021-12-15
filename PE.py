@@ -3,40 +3,31 @@ from PU import PU
 
 
 class PE:
-    def __init__(self, K_0):
-        self.K_0 = K_0
-        self.acc = np.zeros((64, 8))
-        self.PU_0 = PU(self.K_0)
-        self.PU_1 = PU(self.K_0)
-        self.PU_2 = PU(self.K_0)
-        self.PU_3 = PU(self.K_0)
-        self.PU_4 = PU(self.K_0)
-        self.PU_5 = PU(self.K_0)
-        self.PU_6 = PU(self.K_0)
-        self.PU_7 = PU(self.K_0)
-        self.PUs = [self.PU_0, self.PU_1, self.PU_2, self.PU_3, self.PU_4, self.PU_5, self.PU_6, self.PU_7]
+    def __init__(self, M, N_0):
+        self.M = M
+        self.N_0 = N_0
+        self.acc = np.zeros((self.M, self.N_0))
+
+        self.PUs = [None] * self.N_0
+        for i in range(self.N_0):
+            self.PUs[i] = PU(self.M)
 
     def rst_scratch(self):
-        for i in range(8):
+        for i in range(self.N_0):
             self.PUs[i].rst()
 
     def pu_mult(self, a_val, a_row, a_col, B_ji):
         a_col = int(a_col)
-        self.PU_0.cum_multiply(a_val, a_row, B_ji[a_col, 0])
-        self.PU_1.cum_multiply(a_val, a_row, B_ji[a_col, 1])
-        self.PU_2.cum_multiply(a_val, a_row, B_ji[a_col, 2])
-        self.PU_3.cum_multiply(a_val, a_row, B_ji[a_col, 3])
-        self.PU_4.cum_multiply(a_val, a_row, B_ji[a_col, 4])
-        self.PU_5.cum_multiply(a_val, a_row, B_ji[a_col, 5])
-        self.PU_6.cum_multiply(a_val, a_row, B_ji[a_col, 6])
-        self.PU_7.cum_multiply(a_val, a_row, B_ji[a_col, 7])
+        #print(np.shape(B_ji))
+        #print(a_row, a_col, a_val)
+        for i in range(np.shape(B_ji)[1]):
+            self.PUs[i].cum_multiply(a_val, a_row, B_ji[a_col, i])
 
         self.accum()
 
-
     def accum(self):
-        p_sum = np.zeros((64, 8))
-        for i in range(8):
-            p_sum[:, 1] = self.PUs[i].scratch
+        p_sum = np.zeros((self.M, self.N_0))
+        for i in range(self.N_0):
+            p_sum[:, i] = self.PUs[i].scratch
 
         self.acc = self.acc + p_sum
